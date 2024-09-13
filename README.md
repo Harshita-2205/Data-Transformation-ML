@@ -1,8 +1,9 @@
 # Data-Transformation-ML
--Overview
+## Overview
+
 This Python script processes and transforms a dataset from a CSV file to prepare it for machine learning tasks. It applies various data cleaning and transformation techniques to handle missing values, special characters, date columns, non-numeric data, and encodes categorical variables. Additionally, it normalizes and log-transforms numeric columns as required. The script saves the transformed dataset to a new CSV file, ready for further analysis or modeling.
 
-Features
+##Features
 Remove Duplicates: Eliminates duplicate rows from the dataset.
 Handle Missing Data: Fills missing numerical values with the median and categorical values with the mode.
 Handle Special Characters: Cleans non-numeric characters (like currency symbols) from specific columns and converts them to a numeric format.
