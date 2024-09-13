@@ -2,14 +2,22 @@
 This script processes and transforms a dataset from a CSV file to prepare it for machine learning tasks. It performs the following transformations:
 
 1. **Remove Duplicates**: Removes duplicate rows from the dataset.
-2. **Check and Handle Missing Data**: Fills missing numerical values with the median and categorical values with the mode.
-3. **Handle Special Characters**: Removes non-numeric characters (e.g., currency symbols) from specified columns and converts the cleaned columns to float type.
-4. **Handle Date Columns**: Converts date columns to numeric representations and normalizes them between 0 and 1. Invalid dates are either removed or handled based on input.
-5. **Handle Non-Numeric Data**: Replaces unknown values (like 'N/A', 'unknown') with NaN, fills missing values, and applies label encoding for columns with a low number of unique values. One-hot encoding is applied to columns with a high number of unique values.
-6. **Label Encoding for Target Column**: Encodes the specified target column using label encoding.
-7. **One-Hot Encoding**: Applies one-hot encoding to remaining categorical columns.
-8. **Normalization**: Normalizes numeric columns using MinMaxScaler to scale them between 0 and 1.
-9. **Log Transformation**: Applies logarithmic transformation to numeric columns with only positive values.
+2. **Check and Handle Missing Data**: 
+    Fills missing numerical values with the median and categorical values with the mode.
+3. **Handle Special Characters**: 
+    Removes non-numeric characters (e.g., currency symbols) from specified columns and converts the cleaned columns to float type.
+4. **Handle Date Columns**: 
+    Converts date columns to numeric representations and normalizes them between 0 and 1. Invalid dates are either removed or handled based on input.
+5. **Handle Non-Numeric Data**: 
+    Replaces unknown values (like 'N/A', 'unknown') with NaN, fills missing values, and applies label encoding for columns with a low number of unique values. One-hot encoding is applied to columns with a high number of unique values.
+6. **Label Encoding for Target Column**: 
+    Encodes the specified target column using label encoding.
+7. **One-Hot Encoding**: 
+    Applies one-hot encoding to remaining categorical columns.
+8. **Normalization**: 
+    Normalizes numeric columns using MinMaxScaler to scale them between 0 and 1.
+9. **Log Transformation**: 
+    Applies logarithmic transformation to numeric columns with only positive values.
 
 ### Functions:
 - `remove_duplicates(data)`: Removes duplicate rows from the dataset.
@@ -44,13 +52,12 @@ from sklearn.preprocessing import OneHotEncoder
 from sklearn.preprocessing import LabelEncoder
 
 # Input path for CSV file
-path = input("Enter the path of the merged file CSV location: ")
-data = pd.read_csv(os.path.join(path, 'merged.csv'))
+#path = input("Enter the path of the merged file CSV location: ")
+data = pd.read_csv('fetal_health.csv')
 
 # Replace this with the actual target column and date column if any
 target_column = input("Enter the target column for label encoding: ")
-date_column = input("Enter the date column (if any, else leave blank): ")
-
+date_column = " "
 # Remove duplicate values
 def remove_duplicates(data):
     ini_rows = data.shape[0]  # Number of rows before duplicate removal
@@ -76,13 +83,11 @@ def check_missing_data(data):
     return data
 
 # Handle special characters in specific columns (e.g., 'Price')
-def specialchar(data, specialchar_col):
-    for col in specialchar_col:
-        data[col] = data[col].str.replace(r'[^\d.]', '', regex=True)  # Remove non-numeric characters
-        data[col] = data[col].astype('float64')  # Convert to float type
-        print(f"Handled special characters in '{col}' and converted to float.")
+def specialchar(data, specialchar_columns):
+    for col in specialchar_columns:
+        # Convert the column to string to use .str accessor
+        data[col] = data[col].astype(str).str.replace(r'[^\d.]', '', regex=True)  # Remove non-numeric characters
     return data
-
 # Handle date columns
 def handle_dates(data, date_column, drop_invalid_dates=True):
     data[date_column] = pd.to_datetime(data[date_column], errors='coerce')
@@ -138,15 +143,24 @@ def label_encoding(data, target_column):
 
 # Apply One-Hot Encoding to non-numeric columns
 def one_hot_encoding(data):
+    # Select categorical columns
     categorical_columns = data.select_dtypes(include=['object']).columns.tolist()
     
-    encoder = OneHotEncoder(sparse=False)
+    # OneHotEncoder with updated parameter
+    encoder = OneHotEncoder(sparse_output=False)
     one_hot_encoded = encoder.fit_transform(data[categorical_columns])
     
+    # Create a dataframe for the one-hot encoded columns
     one_hot_df = pd.DataFrame(one_hot_encoded, columns=encoder.get_feature_names_out(categorical_columns))
+    
+    # Reset index of the one-hot dataframe and original data to avoid alignment issues
+    one_hot_df = one_hot_df.reset_index(drop=True)
+    data = data.reset_index(drop=True)
     
     # Concatenate the one-hot encoded dataframe with the original dataframe
     df_encoded = pd.concat([data, one_hot_df], axis=1)
+    
+    # Drop the original categorical columns
     df_encoded = df_encoded.drop(categorical_columns, axis=1)
     
     print("Applied One-Hot Encoding to categorical columns")
@@ -190,12 +204,12 @@ def transform_data(data, target_column=None, date_column=None):
     data = check_missing_data(data)
     
     # Step 3: Handle special characters
-    specialchar_columns = ['Price']  # Replace with actual columns
-    data = specialchar(data, specialchar_columns)
+    #specialchar_columns = ['Price']  # Replace with actual columns
+    #data = specialchar(data, specialchar_columns)
     
     # Step 4: Handle date column
-    if date_column:
-        data = handle_dates(data, date_column)
+    #if date_column:
+     #   data = handle_dates(data, date_column)
     
     # Step 5: Handle non-numeric data (replace unknown values, fill missing, encode)
     data = handle_non_numeric_data(data)
@@ -220,6 +234,6 @@ def transform_data(data, target_column=None, date_column=None):
 transformed_data = transform_data(data, target_column=target_column, date_column=date_column)
 
 # Save the transformed data to a new CSV file
-output_path = os.path.join(path, 'transformed_data.csv')
+output_path = os.path.join('.', 'transformed_data.csv')
 transformed_data.to_csv(output_path, index=False)
 print(f"Transformed data saved to {output_path}")
