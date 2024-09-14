@@ -52,8 +52,8 @@ from sklearn.preprocessing import OneHotEncoder
 from sklearn.preprocessing import LabelEncoder
 
 # Input path for CSV file
-#path = input("Enter the path of the merged file CSV location: ")
-data = pd.read_csv('fetal_health.csv')
+path = input("Enter the path of the merged file CSV location: ")
+data = pd.read_csv(path+'merged.csv')
 
 # Replace this with the actual target column and date column if any
 target_column = input("Enter the target column for label encoding: ")
@@ -112,25 +112,21 @@ def handle_dates(data, date_column, drop_invalid_dates=True):
     return data
 
 # Handle non-numeric data
-def handle_non_numeric_data(data, unknown_values=['unknown', 'N/A', 'null', '?']):
-    non_numeric_cols = data.select_dtypes(exclude=[np.number]).columns
+
+def replace_null_values(data, unknown_values=['unknown', 'N/A', 'null', '?']):
+    # Replace unknown values with NaN
+    data.replace(unknown_values, np.nan, inplace=True)
     
-    for col in non_numeric_cols:
-        data[col].replace(unknown_values, np.nan, inplace=True)
-        mode_value = data[col].mode()[0]
-        data[col].fillna(mode_value, inplace=True)
-        
-        if data[col].nunique() < 10:  # Threshold for label encoding
-            le = LabelEncoder()
-            data[col] = le.fit_transform(data[col])
-            print(f"Label encoded column '{col}'")
-        else:
-            ohe = OneHotEncoder(sparse=False, drop='first')
-            encoded_cols = ohe.fit_transform(data[[col]])
-            encoded_df = pd.DataFrame(encoded_cols, columns=[f"{col}_{i}" for i in range(encoded_cols.shape[1])])
-            data = pd.concat([data, encoded_df], axis=1)
-            data.drop(columns=[col], inplace=True)
-            print(f"One-hot encoded column '{col}' and added {encoded_df.shape[1]} columns")
+    # Fill missing values based on column type
+    for col in data.columns:
+        if data[col].dtype == 'object':  # Categorical columns
+            mode_value = data[col].mode()[0]
+            data[col].fillna(mode_value, inplace=True)
+            print(f"Filled missing values in column '{col}' with mode: {mode_value}")
+        else:  # Numerical columns
+            median_value = data[col].median()
+            data[col].fillna(median_value, inplace=True)
+            print(f"Filled missing values in column '{col}' with median: {median_value}")
     
     return data
 
@@ -142,16 +138,22 @@ def label_encoding(data, target_column):
     return data
 
 # Apply One-Hot Encoding to non-numeric columns
-def one_hot_encoding(data):
+def one_hot_encoding(data, max_unique_values=100):
     # Select categorical columns
     categorical_columns = data.select_dtypes(include=['object']).columns.tolist()
     
-    # OneHotEncoder with updated parameter
+    # Filter out columns with more than 'max_unique_values' unique categories
+    columns_to_encode = [col for col in categorical_columns if data[col].nunique() <= max_unique_values]
+    columns_to_drop = [col for col in categorical_columns if data[col].nunique() > max_unique_values]
+    
+    print(f"Skipping one-hot encoding for columns with too many unique values: {columns_to_drop}")
+    
+    # OneHotEncoder for selected columns
     encoder = OneHotEncoder(sparse_output=False)
-    one_hot_encoded = encoder.fit_transform(data[categorical_columns])
+    one_hot_encoded = encoder.fit_transform(data[columns_to_encode])
     
     # Create a dataframe for the one-hot encoded columns
-    one_hot_df = pd.DataFrame(one_hot_encoded, columns=encoder.get_feature_names_out(categorical_columns))
+    one_hot_df = pd.DataFrame(one_hot_encoded, columns=encoder.get_feature_names_out(columns_to_encode))
     
     # Reset index of the one-hot dataframe and original data to avoid alignment issues
     one_hot_df = one_hot_df.reset_index(drop=True)
@@ -160,10 +162,10 @@ def one_hot_encoding(data):
     # Concatenate the one-hot encoded dataframe with the original dataframe
     df_encoded = pd.concat([data, one_hot_df], axis=1)
     
-    # Drop the original categorical columns
-    df_encoded = df_encoded.drop(categorical_columns, axis=1)
+    # Drop the original categorical columns that were encoded
+    df_encoded = df_encoded.drop(columns_to_encode + columns_to_drop, axis=1)
     
-    print("Applied One-Hot Encoding to categorical columns")
+    print(f"Applied One-Hot Encoding to columns: {columns_to_encode}")
     return df_encoded
 
 # Normalize numeric data
@@ -194,7 +196,20 @@ def log_transform(data):
     return data
 
 # Main function to transform the data
-def transform_data(data, target_column=None, date_column=None):
+def transform_data(data, target_column=None, date_column=None, specialchar_columns=None):
+    """
+    This function applies a series of transformations to the input dataset to prepare it for machine learning tasks.
+    
+    Parameters:
+    - data (pd.DataFrame): The dataset to transform.
+    - target_column (str): The name of the target column for label encoding.
+    - date_column (str): The name of the date column to process and normalize.
+    - specialchar_columns (list of str): List of columns where special characters need to be removed.
+    
+    Returns:
+    - pd.DataFrame: The transformed dataset.
+    """
+    
     print("Starting data transformation...")
     
     # Step 1: Remove duplicates
@@ -204,32 +219,31 @@ def transform_data(data, target_column=None, date_column=None):
     data = check_missing_data(data)
     
     # Step 3: Handle special characters
-    #specialchar_columns = ['Price']  # Replace with actual columns
-    #data = specialchar(data, specialchar_columns)
+    if specialchar_columns:
+        data = specialchar(data, specialchar_columns)
     
-    # Step 4: Handle date column
-    #if date_column:
-     #   data = handle_dates(data, date_column)
+    # Step 4: Handle date column (if provided)
+    if date_column and date_column in data.columns:
+        data = handle_dates(data, date_column)
     
     # Step 5: Handle non-numeric data (replace unknown values, fill missing, encode)
-    data = handle_non_numeric_data(data)
+    data = replace_null_values(data)
     
     # Step 6: Apply One-Hot Encoding to remaining categorical columns
     data = one_hot_encoding(data)
     
-    # Step 7: Label encode the target column
-    if target_column:
+    # Step 7: Label encode the target column (if provided)
+    if target_column and target_column in data.columns:
         data = label_encoding(data, target_column)
     
-    # Step 8: Apply normalization to numeric data
+    # Step 8: Normalize numeric data
     data = normalization(data)
     
-    # Step 9: Apply log transformation to numeric data
+    # Step 9: Apply log transformation to numeric columns with positive values
     data = log_transform(data)
     
     print("Data transformation complete.")
     return data
-
 # Apply transformation
 transformed_data = transform_data(data, target_column=target_column, date_column=date_column)
 
