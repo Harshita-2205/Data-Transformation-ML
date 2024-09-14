@@ -39,10 +39,6 @@ This script processes and transforms a dataset from a CSV file to prepare it for
 
 """
 
-
-
-
-
 import numpy as np
 import pandas as pd
 import os
