@@ -184,18 +184,6 @@ def log_transform(data):
 
 # Main function to transform the data
 def transform_data(data, target_column=None, date_column=None, specialchar_columns=None):
-    """
-    This function applies a series of transformations to the input dataset to prepare it for machine learning tasks.
-    
-    Parameters:
-    - data (pd.DataFrame): The dataset to transform.
-    - target_column (str): The name of the target column for label encoding.
-    - date_column (str): The name of the date column to process and normalize.
-    - specialchar_columns (list of str): List of columns where special characters need to be removed.
-    
-    Returns:
-    - pd.DataFrame: The transformed dataset.
-    """
     
     print("Starting data transformation...")
     
