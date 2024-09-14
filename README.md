@@ -92,10 +92,8 @@ Purpose: Converts a date column to numeric representation and normalizes it.
 Input: DataFrame (data), Column name (date_column), Boolean (drop_invalid_dates).
 Output: DataFrame with normalized date column.
 
-### handle_non_numeric_data(data, unknown_values=['unknown', 'N/A', 'null', '?'])
+### replace_null_values(data, unknown_values=['unknown', 'N/A', 'null', '?'])
 Purpose: Replaces unknown values and encodes categorical columns.
-Columns with fewer unique values: Label encoding.
-Columns with more unique values: One-hot encoding.
 Input: DataFrame (data), List of unknown values (unknown_values).
 Output: DataFrame with encoded columns.
 
