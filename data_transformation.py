@@ -1,42 +1,33 @@
 """
-This script processes and transforms a dataset from a CSV file to prepare it for machine learning tasks. It performs the following transformations:
+This script transforms a dataset from a CSV file to prepare it for machine learning tasks.
 
-1. **Remove Duplicates**: Removes duplicate rows from the dataset.
-2. **Check and Handle Missing Data**: 
-    Fills missing numerical values with the median and categorical values with the mode.
-3. **Handle Special Characters**: 
-    Removes non-numeric characters (e.g., currency symbols) from specified columns and converts the cleaned columns to float type.
-4. **Handle Date Columns**: 
-    Converts date columns to numeric representations and normalizes them between 0 and 1. Invalid dates are either removed or handled based on input.
-5. **Handle Non-Numeric Data**: 
-    Replaces unknown values (like 'N/A', 'unknown') with NaN, fills missing values, and applies label encoding for columns with a low number of unique values. One-hot encoding is applied to columns with a high number of unique values.
-6. **Label Encoding for Target Column**: 
-    Encodes the specified target column using label encoding.
-7. **One-Hot Encoding**: 
-    Applies one-hot encoding to remaining categorical columns.
-8. **Normalization**: 
-    Normalizes numeric columns using MinMaxScaler to scale them between 0 and 1.
-9. **Log Transformation**: 
-    Applies logarithmic transformation to numeric columns with only positive values.
+Transformations include:
+1. **Remove Duplicates**: Drops duplicate rows.
+2. **Handle Missing Data**: Fills missing numerical values with the median and categorical values with the mode.
+3. **Remove Special Characters**: Removes non-numeric characters from specified columns and converts them to float.
+4. **Process Date Columns**: Converts date columns to numeric representations and normalizes them.
+5. **Handle Non-Numeric Data**: Replaces unknown values (e.g., 'N/A', 'unknown'), fills missing values, applies label encoding or one-hot encoding.
+6. **Label Encode Target Column**: Encodes the specified target column.
+7. **One-Hot Encoding**: Encodes remaining categorical columns.
+8. **Normalize Data**: Scales numeric columns between 0 and 1.
+9. **Log Transformation**: Applies logarithmic transformation to numeric columns with positive values.
 
 ### Functions:
-- `remove_duplicates(data)`: Removes duplicate rows from the dataset.
-- `check_missing_data(data)`: Fills missing data by column type (categorical: mode, numerical: median).
-- `specialchar(data, specialchar_col)`: Cleans specified columns by removing non-numeric characters and converts them to float type.
-- `handle_dates(data, date_column, drop_invalid_dates)`: Converts a date column to numeric representation and normalizes it.
-- `handle_non_numeric_data(data, unknown_values)`: Replaces unknown values, fills missing categorical data, and applies appropriate encoding (label encoding or one-hot encoding).
-- `label_encoding(data, target_column)`: Encodes the target column using label encoding.
-- `one_hot_encoding(data)`: Applies one-hot encoding to remaining categorical columns.
-- `normalization(data)`: Normalizes numeric data using MinMaxScaler.
-- `standardization(data)`: Standardizes numeric data using StandardScaler.
+- `remove_duplicates(data)`: Drops duplicate rows.
+- `check_missing_data(data)`: Fills missing data.
+- `specialchar(data, specialchar_columns)`: Cleans columns by removing non-numeric characters.
+- `handle_dates(data, date_column)`: Converts date columns to numeric and normalizes them.
+- `replace_null_values(data)`: Replaces unknown values and fills missing data.
+- `label_encoding(data, target_column)`: Encodes the target column.
+- `one_hot_encoding(data)`: Applies one-hot encoding.
+- `normalization(data)`: Normalizes numeric columns.
 - `log_transform(data)`: Applies log transformation to numeric columns with positive values.
-- `transform_data(data, target_column, date_column)`: Main function that calls the above functions to perform a full transformation on the dataset.
+- `transform_data(data, target_column, date_column)`: Runs all transformations on the dataset.
 
 ### Usage:
-1. The script prompts the user to enter the file path, target column, and date column if available.
-2. The dataset is loaded from the specified CSV file, cleaned, transformed, and encoded.
-3. The transformed data is saved to a new CSV file (`transformed_data.csv`) in the same directory as the input file.
-
+1. Load the dataset from a CSV file.
+2. Apply the transformations.
+3. Save the transformed data to a new CSV file.
 """
 
 import numpy as np
